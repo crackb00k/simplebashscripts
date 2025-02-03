@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Original script to test port communication
+test_port() {
+    host=$1
+    port=$2
+    nc -z -w 3 $host $port >/dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        echo "Success"
+    else
+        echo "Failure"
+    fi
+}
+
+# Prompt user for IP address or hostname
+read -p "Enter IP address or hostname: " target
+
+# Test ports
+echo -n "Port 1556: "
+test_port $target 1556
+
+echo -n "Port 10082: "
+test_port $target 10082
+
+echo -n "Port 10102: "
+test_port $target 10102
+
+echo -n "Port 13724: "
+test_port $target 13724
+

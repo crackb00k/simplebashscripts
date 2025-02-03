@@ -1,0 +1,58 @@
+#!/bin/bash
+
+#Bash Script for NetBackup Master and Media Server based on nmap.
+#The intention is to scan all hosts in the subnet range, list them and test port communication
+
+
+
+# Get the IP address of the default gateway
+GATEWAY_IP=$(ip route | awk '/default/ {print $3}')
+
+# Get the subnet mask
+SUBNET_MASK=$(ip addr show | awk '/inet / {print $2}' | cut -d '/' -f2)
+
+# Calculate the subnet range
+SUBNET_RANGE=$(ipcalc -b $GATEWAY_IP/$SUBNET_MASK | awk '/Network:/ {print $2}')
+
+# Use nmap to scan the subnet range and get all IP addresses
+nmap -sT $SUBNET_RANGE | awk '/Nmap scan report for/ {print $5}' > ips.txt
+
+# Remove duplicates and sort the list
+sort -u ips.txt -o ips.txt
+
+# Function to test port communication
+test_port() {
+    host=$1
+    port=$2
+    nc -z -w 3 $host $port >/dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        echo "Success"
+    else
+        echo "Failure"
+    fi
+}
+
+# OLD PROMPT: Prompt user for IP address or hostname
+# read -p "Enter IP address or hostname: " target
+
+#Define Variable x
+x=1
+
+#Calculate number of lines in file
+MAX=$(wc -l ips.txt)
+
+# Test ports - Repeat for all services as you desire
+echo -n "PBX | Port 1556 on IP" $(head -n $x ips.txt)
+test_port $(head -n $x ips.txt) 1556
+
+echo -n "spoold | Port 10082: "
+test_port $target 10082
+
+echo -n "spad | Port 10102: "
+test_port $target 10102
+
+echo -n "VNETD | Port 13724: "
+test_port $target 13724
+
+echo -n "BPCD | Port 13782: "
+test_port $target 13782

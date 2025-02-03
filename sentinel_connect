@@ -1,0 +1,32 @@
+#!/bin/bash
+
+#By defining workspace ID and shared key, we can test connection to Microsoft Sentinel
+
+WORKSPACE_ID="<WORKSPACE_ID>"
+SHARED_KEY="<SHARED_KEY>"
+
+# Define a timestamp for the API call
+TIMESTAMP=`date +%Y-%m-%dT%H:%M:%SZ`
+
+# Create a string to sign
+STRING_TO_SIGN="POST\nlogs\napi.loganalytics.io\n${TIMESTAMP}"
+
+# Create a signature
+SIGNATURE=$(echo -n "${STRING_TO_SIGN}" | openssl sha256 -hmac "${SHARED_KEY}" -binary | base64)
+
+# Create an Authorization header
+AUTHORIZATION="SharedKey ${WORKSPACE_ID}:${SIGNATURE}"
+
+# Send a POST request to the Azure Log Analytics Workspace API
+curl -H "Authorization: ${AUTHORIZATION}" \
+     -H "Log-Type: test" \
+     -H "x-ms-date: ${TIMESTAMP}" \
+     -d '{"test": "data"}' \
+     "https://${WORKSPACE_ID}.ods.opinsights.azure.com/api/logs?api-version=2016-04-01"
+
+# Check the exit status of the curl command
+if [ $? -eq 0 ]; then
+    echo "Connectivity to Microsoft Sentinel is successful."
+else
+    echo "Connectivity to Microsoft Sentinel failed."
+fi

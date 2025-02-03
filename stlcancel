@@ -1,0 +1,38 @@
+#!/bin/bash
+
+#Script to be used to run a command with a PID file attached to it
+# I've used a NetBackup Command, but we can do this with all types
+
+if [ "$#" -ne 1 ]; then
+    echo "Usage: $0 LISTFILE"
+    exit 1
+fi
+
+LISTFILE="$1"
+
+if [ ! -f "$LISTFILE" ]; then
+    echo "Error: File '$LISTFILE' not found!"
+    exit 1
+fi
+
+while IFS= read -r pid; do
+    /usr/openv/netbackup/bin/admincmd/nbstlutil cancel -backupid "$pid" -force
+    
+    if [ $? -eq 0 ]; then
+        echo "Successfully executed nbstlutil for backup ID: $pid"
+    else
+        echo "Failed to execute nbstlutil for backup ID: $pid"
+    fi
+done < "$LISTFILE"
+
+
+
+#while IFS= read -r pid; do
+#    <COMMAND> <OPTION> "$pid"
+#           (ex: rm -r "$pid")
+#    if [ $? -eq 0 ]; then
+#        echo "Successfully executed <COMMAND> for backup ID: $pid"
+#    else
+#        echo "Failed to execute <COMMAND> for backup ID: $pid"
+#    fi
+#done < "$LISTFILE"
